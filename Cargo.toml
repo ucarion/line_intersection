@@ -1,0 +1,7 @@
+[package]
+name = "line_segment_intersection"
+version = "0.1.0"
+authors = ["Ulysse Carion <ulysse@ulysse.io>"]
+
+[dependencies]
+num-traits = "0.1"
