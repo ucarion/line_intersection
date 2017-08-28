@@ -29,6 +29,7 @@ use num_traits::Float;
 ///
 /// For the purposes of this library, the order of `from` and `to` does not matter; swapping the
 /// values of `from` and `to` will never affect the result of calling `LineSegment::relate`.
+#[derive(Debug, PartialEq)]
 pub struct LineSegment<T> {
     pub from: [T; 2],
     pub to: [T; 2],
@@ -45,13 +46,13 @@ pub enum LineRelation<T> {
     DivergentDisjoint,
 
     /// The two lines are collinear, and overlap one another; there may be an infinite number of
-    /// intersections between them.
+    /// intersections between them. The overlapping line segment is provided.
     ///
     /// *Note:* The case of two collinear line segments sharing one endpoint is covered by this
     /// case. An example of this is the line segments `[0, 0] -> [0, 1]` and `[0, 1] -> [0, 2]`.
     /// Aside from this special case, overlapping collinear lines have an infinite number of
     /// intersections.
-    CollinearOverlapping,
+    CollinearOverlapping(LineSegment<T>),
 
     /// The two lines are collinear, but do not overlap one another.
     CollinearDisjoint,
@@ -73,31 +74,15 @@ impl<T> LineRelation<T> {
 impl<T: Float> LineSegment<T> {
     /// Get the relationship between this line segment and another.
     pub fn relate(&self, other: &LineSegment<T>) -> LineRelation<T> {
-        let sub = |a: &[T; 2], b: &[T; 2]| -> [T; 2] {
-            [a[0] - b[0], a[1] - b[1]]
-        };
-
-        let cross = |a: &[T; 2], b: &[T; 2]| -> T {
-            a[0] * b[1] - a[1] * b[0]
-        };
-
-        let dot = |a: &[T; 2], b: &[T; 2]| -> T {
-            a[0] * b[0] + a[1] * b[1]
-        };
-
-        let div = |a: &[T; 2], b: T| -> [T; 2] {
-            [a[0] / b, a[1] / b]
-        };
-
         // see https://stackoverflow.com/a/565282
         let p = self.from;
         let q = other.from;
-        let r = sub(&self.to, &self.from);
-        let s = sub(&other.to, &other.from);
+        let r = Self::sub(&self.to, &self.from);
+        let s = Self::sub(&other.to, &other.from);
 
-        let r_cross_s = cross(&r, &s);
-        let q_minus_p = sub(&q, &p);
-        let q_minus_p_cross_r = cross(&q_minus_p, &r);
+        let r_cross_s = Self::cross(&r, &s);
+        let q_minus_p = Self::sub(&q, &p);
+        let q_minus_p_cross_r = Self::cross(&q_minus_p, &r);
 
         // are the lines are parallel?
         if r_cross_s == T::zero() {
@@ -105,14 +90,23 @@ impl<T: Float> LineSegment<T> {
             if q_minus_p_cross_r == T::zero() {
                 // the lines are collinear, so get coordinates of `other` along `self` and see if
                 // they overlap with [0, 1] (which are the coordinates of `self` along `self`).
-                let r_norm = div(&r, dot(&r, &r));
+                let r_norm = Self::div(&r, Self::dot(&r, &r));
 
-                let t0 = dot(&q_minus_p, &r_norm);
-                let t1 = t0 + dot(&s, &r_norm);
+                let t0 = Self::dot(&q_minus_p, &r_norm);
+                let t1 = t0 + Self::dot(&s, &r_norm);
+                let (t0, t1) = (t0.min(t1), t0.max(t1));
 
                 // do the ranges overlap with [0, 1]?
-                if t0.min(t1) <= T::one() && t0.max(t1) >= T::zero() {
-                    LineRelation::CollinearOverlapping
+                if t0 <= T::one() && t1 >= T::zero() {
+                    // get the overlapping t-coord range, and convert them to points
+                    let t_min = t0.max(T::zero());
+                    let t_max = t1.min(T::one());
+
+                    let overlap = &[
+                        Self::t_coord_to_point(&p, &r, t_min),
+                        Self::t_coord_to_point(&p, &r, t_max),
+                    ];
+                    LineRelation::CollinearOverlapping(overlap.into())
                 } else {
                     LineRelation::CollinearDisjoint
                 }
@@ -122,20 +116,40 @@ impl<T: Float> LineSegment<T> {
             }
         } else {
             // the lines are not parallel
-            let t = cross(&q_minus_p, &div(&s, r_cross_s));
-            let u = cross(&q_minus_p, &div(&r, r_cross_s));
+            let t = Self::cross(&q_minus_p, &Self::div(&s, r_cross_s));
+            let u = Self::cross(&q_minus_p, &Self::div(&r, r_cross_s));
 
             // are the intersection coordinates both in range?
             if T::zero() <= t && t <= T::one() && T::zero() <= u && u <= T::one() {
                 // there is an intersection
-                let intersection_point = [p[0] + t * r[0], p[1] + t * r[1]];
-                LineRelation::DivergentIntersecting(intersection_point)
+                LineRelation::DivergentIntersecting(Self::t_coord_to_point(&p, &r, t))
             } else {
                 // there is no intersection
                 LineRelation::DivergentDisjoint
             }
         }
-   }
+    }
+
+    fn sub(a: &[T; 2], b: &[T; 2]) -> [T; 2] {
+        [a[0] - b[0], a[1] - b[1]]
+    }
+
+    fn cross(a: &[T; 2], b: &[T; 2]) -> T {
+        a[0] * b[1] - a[1] * b[0]
+    }
+
+    fn dot(a: &[T; 2], b: &[T; 2]) -> T {
+        a[0] * b[0] + a[1] * b[1]
+    }
+
+    fn div(a: &[T; 2], b: T) -> [T; 2] {
+        [a[0] / b, a[1] / b]
+    }
+
+    fn t_coord_to_point(p: &[T; 2], r: &[T; 2], t: T) -> [T; 2] {
+        [p[0] + t * r[0], p[1] + t * r[1]]
+    }
+
 }
 
 /// Convert `a` and `b` into `LineSegment`s, and `relate` them.
@@ -186,7 +200,8 @@ mod tests {
     fn collinear_overlapping() {
         let a = [[0.0, 0.0], [0.0, 2.0]];
         let b = [[0.0, 1.0], [0.0, 1.5]];
-        test_point_relations(&a, &b, LineRelation::CollinearOverlapping);
+        let overlap = &[[0.0, 1.0], [0.0, 1.5]];
+        test_point_relations(&a, &b, LineRelation::CollinearOverlapping(overlap.into()));
         assert_eq!(None, relate(&a, &b).unique_intersection());
     }
 
