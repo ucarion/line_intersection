@@ -1,6 +1,6 @@
 # line\_segment\_intersection
 
-![Crate version shield](https://img.shields.io/crates/v/line_segment_intersection.svg)
+[![Crate version shield](https://img.shields.io/crates/v/line_segment_intersection.svg)](https://crates.io/crates/line_segment_intersection)
 
 [Documentation on `docs.rs`](https://docs.rs/line_segment_intersection)
 
