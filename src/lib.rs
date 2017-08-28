@@ -33,21 +33,21 @@ pub enum LineRelation<T> {
     ParallelDisjoint,
 }
 
-impl LineSegment<f64> {
-    pub fn relate(&self, other: &LineSegment<f64>) -> LineRelation<f64> {
-        let sub = |a: &[f64; 2], b: &[f64; 2]| -> [f64; 2] {
+impl<T: Float> LineSegment<T> {
+    pub fn relate(&self, other: &LineSegment<T>) -> LineRelation<T> {
+        let sub = |a: &[T; 2], b: &[T; 2]| -> [T; 2] {
             [a[0] - b[0], a[1] - b[1]]
         };
 
-        let cross = |a: &[f64; 2], b: &[f64; 2]| -> f64 {
+        let cross = |a: &[T; 2], b: &[T; 2]| -> T {
             a[0] * b[1] - a[1] * b[0]
         };
 
-        let dot = |a: &[f64; 2], b: &[f64; 2]| -> f64 {
+        let dot = |a: &[T; 2], b: &[T; 2]| -> T {
             a[0] * b[0] + a[1] * b[1]
         };
 
-        let div = |a: &[f64; 2], b: f64| -> [f64; 2] {
+        let div = |a: &[T; 2], b: T| -> [T; 2] {
             [a[0] / b, a[1] / b]
         };
 
@@ -62,9 +62,9 @@ impl LineSegment<f64> {
         let q_minus_p_cross_r = cross(&q_minus_p, &r);
 
         // are the lines are parallel?
-        if r_cross_s == 0.0 {
+        if r_cross_s == T::zero() {
             // are the lines collinear?
-            if q_minus_p_cross_r == 0.0 {
+            if q_minus_p_cross_r == T::zero() {
                 // the lines are collinear, so get coordinates of `other` along `self` and see if
                 // they overlap with [0, 1] (which are the coordinates of `self` along `self`).
                 let r_norm = div(&r, dot(&r, &r));
@@ -73,7 +73,7 @@ impl LineSegment<f64> {
                 let t1 = t0 + dot(&s, &r_norm);
 
                 // do the ranges overlap with [0, 1]?
-                if t0.min(t1) <= 1.0 && t0.max(t1) >= 0.0 {
+                if t0.min(t1) <= T::one() && t0.max(t1) >= T::zero() {
                     LineRelation::CollinearOverlapping
                 } else {
                     LineRelation::CollinearDisjoint
@@ -88,7 +88,7 @@ impl LineSegment<f64> {
             let u = cross(&q_minus_p, &div(&r, r_cross_s));
 
             // are the intersection coordinates both in range?
-            if 0.0 <= t && t <= 1.0 && 0.0 <= u && u <= 1.0 {
+            if T::zero() <= t && t <= T::one() && T::zero() <= u && u <= T::one() {
                 // there is an intersection
                 let intersection_point = [p[0] + t * r[0], p[1] + t * r[1]];
                 LineRelation::DivergentIntersecting(intersection_point)
@@ -100,7 +100,7 @@ impl LineSegment<f64> {
    }
 }
 
-pub fn relate<S: Into<LineSegment<f64>>>(a: S, b: S) -> LineRelation<f64> {
+pub fn relate<T: Float, S: Into<LineSegment<T>>>(a: S, b: S) -> LineRelation<T> {
     a.into().relate(&b.into())
 }
 
