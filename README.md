@@ -1,23 +1,36 @@
-# line\_segment\_intersection
+# line\_intersection
 
-[![Crate version shield](https://img.shields.io/crates/v/line_segment_intersection.svg)](https://crates.io/crates/line_segment_intersection)
+[![Crate version shield](https://img.shields.io/crates/v/line_intersection.svg)](https://crates.io/crates/line_intersection)
 
-[Documentation on `docs.rs`](https://docs.rs/line_segment_intersection)
+[Documentation on `docs.rs`](https://docs.rs/line_intersection)
 
-[Crate on `crates.io`](https://crates.io/crates/line_segment_intersection)
+[Crate on `crates.io`](https://crates.io/crates/line_intersection)
 
-A tiny Rust library for finding the intersection of two line segments in
-two-dimensional space.
+A tiny Rust library for finding the intersection of two lines, rays, or line
+segments.
 
 ```rust
-extern crate line_segment_intersection;
+extern crate geo;
+extern crate line_intersection;
 
-use line_segment_intersection::relate;
+fn main() {
+    // find the intersection of a line segment and an infinite line
+    use line_intersection::{LineInterval, LineRelation};
+    use geo::{Coordinate, Line, Point};
 
-let line1 = [[0.0, 0.0], [1.0, 1.0]];
-let line2 = [[1.0, 0.0], [0.0, 1.0]];
+    let segment = LineInterval::line_segment(Line {
+        start: (0.0, 0.0).into(),
+        end: (3.0, 3.0).into(),
+    });
 
-assert_eq!(Some([0.5, 0.5]), relate(&line1, &line2).unique_intersection());
+    let line = LineInterval::line(Line {
+        start: (2.0, 0.0).into(),
+        end: (2.0, 0.1).into(),
+    });
+
+    let intersection = segment.relate(&line).unique_intersection();
+    assert_eq!(Some(Point(Coordinate { x: 2.0, y: 2.0 })), intersection);
+}
 ```
 
 ## License (MIT)

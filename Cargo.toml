@@ -1,12 +1,13 @@
 [package]
-name = "line_segment_intersection"
-description = "Find the intersection between two 2d line segments"
-version = "0.2.0"
-documentation = "https://docs.rs/line_segment_intersection"
-homepage = "https://github.com/ucarion/line_segment_intersection"
-repository = "https://github.com/ucarion/line_segment_intersection"
+name = "line_intersection"
+description = "Find the intersection between two 2d lines, rays, or line segments"
+version = "0.3.0"
+documentation = "https://docs.rs/line_intersection"
+homepage = "https://github.com/ucarion/line_intersection"
+repository = "https://github.com/ucarion/line_intersection"
 authors = ["Ulysse Carion <ulysse@ulysse.io>"]
 license = "MIT"
 
 [dependencies]
+geo = "0.5"
 num-traits = "0.1"
