@@ -9,5 +9,5 @@ authors = ["Ulysse Carion <ulysse@ulysse.io>"]
 license = "MIT"
 
 [dependencies]
-geo = "0.10"
+geo = "0.12"
 num-traits = "0.2"
