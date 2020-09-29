@@ -108,10 +108,10 @@ impl<T: Float> LineInterval<T> {
     /// Get the relationship between this line segment and another.
     pub fn relate(&self, other: &LineInterval<T>) -> LineRelation<T> {
         // see https://stackoverflow.com/a/565282
-        let p = self.line.start;
-        let q = other.line.start;
-        let r = self.line.end - self.line.start;
-        let s = other.line.end - other.line.start;
+        let p = self.line.start_point();
+        let q = other.line.start_point();
+        let r = self.line.end_point() - p;
+        let s = other.line.end_point() - q;
 
         let r_cross_s = Self::cross(&r, &s);
         let q_minus_p = q - p;
@@ -133,10 +133,10 @@ impl<T: Float> LineInterval<T> {
             let u = Self::cross(&q_minus_p, &Self::div(&r, r_cross_s));
 
             // are the intersection coordinates both in range?
-            let t_in_range = self.interval_of_intersection.0 <= t &&
-                t <= self.interval_of_intersection.1;
-            let u_in_range = other.interval_of_intersection.0 <= u &&
-                u <= other.interval_of_intersection.1;
+            let t_in_range =
+                self.interval_of_intersection.0 <= t && t <= self.interval_of_intersection.1;
+            let u_in_range =
+                other.interval_of_intersection.0 <= u && u <= other.interval_of_intersection.1;
 
             if t_in_range && u_in_range {
                 // there is an intersection
