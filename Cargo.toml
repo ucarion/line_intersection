@@ -10,4 +10,5 @@ license = "MIT"
 
 [dependencies]
 geo = "0.18.0"
-num-traits = "0.2.14"
+
+[features]

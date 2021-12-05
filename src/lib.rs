@@ -37,10 +37,8 @@
 //! ```
 
 extern crate geo;
-extern crate num_traits;
 
-use geo::{Line, Point};
-use num_traits::Float;
+use geo::{GeoFloat, Line, Point};
 
 /// An interval (continuous subset) of a line.
 ///
@@ -53,14 +51,14 @@ use num_traits::Float;
 /// It should always be the case that `interval_of_intersection.0 < interval_of_intersection.1`,
 /// unless you want a degenerate line that cannot be intersected.
 #[derive(Debug, PartialEq)]
-pub struct LineInterval<T: Float> {
+pub struct LineInterval<T: GeoFloat> {
     pub line: Line<T>,
     pub interval_of_intersection: (T, T),
 }
 
 /// The relationship between two line segments.
 #[derive(Debug, PartialEq)]
-pub enum LineRelation<T: Float> {
+pub enum LineRelation<T: GeoFloat> {
     /// The line intervals are not parallel (or anti-parallel), and "meet" each other at exactly
     /// one point.
     DivergentIntersecting(Point<T>),
@@ -74,7 +72,7 @@ pub enum LineRelation<T: Float> {
     Parallel,
 }
 
-impl<T: Float> LineRelation<T> {
+impl<T: GeoFloat> LineRelation<T> {
     pub fn unique_intersection(self) -> Option<Point<T>> {
         match self {
             LineRelation::DivergentIntersecting(p) => Some(p),
@@ -83,7 +81,7 @@ impl<T: Float> LineRelation<T> {
     }
 }
 
-impl<T: Float> LineInterval<T> {
+impl<T: GeoFloat> LineInterval<T> {
     pub fn line_segment(line: Line<T>) -> LineInterval<T> {
         LineInterval {
             line: line,
